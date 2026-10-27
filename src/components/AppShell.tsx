@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Home, Receipt, ListOrdered, Wallet, BarChart3, AlertTriangle, Info, X } from "lucide-react";
+import { Home, Receipt, ListOrdered, Wallet, BarChart3, FileImage, AlertTriangle, Info, X } from "lucide-react";
 import { useState, useEffect, type ReactNode } from "react";
 import { onStorageChange, probeStorage, requestPersistence, storageFailing } from "@/lib/db";
 
@@ -10,6 +10,7 @@ const navItems = [
   { to: "/fechamento", label: "Fechar dia", icon: Receipt },
   { to: "/historico", label: "Corridas", icon: ListOrdered },
   { to: "/extrato", label: "Extrato", icon: Wallet },
+  { to: "/importar", label: "Importar", icon: FileImage },
   { to: "/relatorios", label: "Relatórios", icon: BarChart3 },
 ] as const;
 
@@ -88,7 +89,7 @@ export function AppShell({ children, title }: { children: ReactNode; title: stri
 
 
       <nav aria-label="Navegação principal" className="fixed bottom-0 left-0 right-0 z-40 border-t border-border bg-card safe-bottom">
-        <div className="mx-auto grid max-w-2xl grid-cols-5">
+        <div className="mx-auto grid max-w-2xl grid-cols-6">
           {navItems.map((it) => {
             const active = it.to === "/" ? pathname === "/" : pathname.startsWith(it.to);
             const Icon = it.icon;
@@ -97,7 +98,7 @@ export function AppShell({ children, title }: { children: ReactNode; title: stri
                 key={it.to}
                 to={it.to}
                 aria-current={active ? "page" : undefined}
-                className={`flex flex-col items-center justify-center gap-1 py-2.5 text-xs font-medium transition-colors ${
+                className={`flex flex-col items-center justify-center gap-1 py-2.5 text-[11px] font-medium transition-colors ${
                   active ? "text-primary" : "text-muted-foreground hover:text-foreground"
                 }`}
               >

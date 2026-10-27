@@ -14,6 +14,7 @@ import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedExtratoRouteImport } from './routes/_authenticated/extrato'
 import { Route as AuthenticatedFechamentoRouteImport } from './routes/_authenticated/fechamento'
 import { Route as AuthenticatedHistoricoRouteImport } from './routes/_authenticated/historico'
+import { Route as AuthenticatedImportarRouteImport } from './routes/_authenticated/importar'
 import { Route as AuthenticatedRelatoriosRouteImport } from './routes/_authenticated/relatorios'
 
 const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
@@ -40,6 +41,11 @@ const AuthenticatedHistoricoRoute = AuthenticatedHistoricoRouteImport.update({
   path: '/historico',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedImportarRoute = AuthenticatedImportarRouteImport.update({
+  id: '/importar',
+  path: '/importar',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedRelatoriosRoute = AuthenticatedRelatoriosRouteImport.update({
   id: '/relatorios',
   path: '/relatorios',
@@ -51,12 +57,14 @@ export interface FileRoutesByFullPath {
   '/extrato': typeof AuthenticatedExtratoRoute
   '/fechamento': typeof AuthenticatedFechamentoRoute
   '/historico': typeof AuthenticatedHistoricoRoute
+  '/importar': typeof AuthenticatedImportarRoute
   '/relatorios': typeof AuthenticatedRelatoriosRoute
 }
 export interface FileRoutesByTo {
   '/extrato': typeof AuthenticatedExtratoRoute
   '/fechamento': typeof AuthenticatedFechamentoRoute
   '/historico': typeof AuthenticatedHistoricoRoute
+  '/importar': typeof AuthenticatedImportarRoute
   '/relatorios': typeof AuthenticatedRelatoriosRoute
   '/': typeof AuthenticatedIndexRoute
 }
@@ -66,20 +74,34 @@ export interface FileRoutesById {
   '/_authenticated/extrato': typeof AuthenticatedExtratoRoute
   '/_authenticated/fechamento': typeof AuthenticatedFechamentoRoute
   '/_authenticated/historico': typeof AuthenticatedHistoricoRoute
+  '/_authenticated/importar': typeof AuthenticatedImportarRoute
   '/_authenticated/relatorios': typeof AuthenticatedRelatoriosRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/extrato' | '/fechamento' | '/historico' | '/relatorios'
+  fullPaths:
+    | '/'
+    | '/extrato'
+    | '/fechamento'
+    | '/historico'
+    | '/importar'
+    | '/relatorios'
   fileRoutesByTo: FileRoutesByTo
-  to: '/extrato' | '/fechamento' | '/historico' | '/relatorios' | '/'
+  to:
+    | '/extrato'
+    | '/fechamento'
+    | '/historico'
+    | '/importar'
+    | '/relatorios'
+    | '/'
   id:
     | '__root__'
     | '/_authenticated'
     | '/_authenticated/extrato'
     | '/_authenticated/fechamento'
     | '/_authenticated/historico'
+    | '/_authenticated/importar'
     | '/_authenticated/relatorios'
     | '/_authenticated/'
   fileRoutesById: FileRoutesById
@@ -125,6 +147,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedHistoricoRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/importar': {
+      id: '/_authenticated/importar'
+      path: '/importar'
+      fullPath: '/importar'
+      preLoaderRoute: typeof AuthenticatedImportarRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/relatorios': {
       id: '/_authenticated/relatorios'
       path: '/relatorios'
@@ -139,6 +168,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedExtratoRoute: typeof AuthenticatedExtratoRoute
   AuthenticatedFechamentoRoute: typeof AuthenticatedFechamentoRoute
   AuthenticatedHistoricoRoute: typeof AuthenticatedHistoricoRoute
+  AuthenticatedImportarRoute: typeof AuthenticatedImportarRoute
   AuthenticatedRelatoriosRoute: typeof AuthenticatedRelatoriosRoute
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
 }
@@ -147,6 +177,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedExtratoRoute: AuthenticatedExtratoRoute,
   AuthenticatedFechamentoRoute: AuthenticatedFechamentoRoute,
   AuthenticatedHistoricoRoute: AuthenticatedHistoricoRoute,
+  AuthenticatedImportarRoute: AuthenticatedImportarRoute,
   AuthenticatedRelatoriosRoute: AuthenticatedRelatoriosRoute,
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
 }
