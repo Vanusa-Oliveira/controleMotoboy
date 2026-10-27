@@ -190,6 +190,11 @@ export function Welcome({ onEnter }: { onEnter: () => void }) {
           >
             Entrar <ArrowRight className="h-5 w-5" />
           </button>
+          <p className="mt-4 text-center text-[11px] leading-snug text-white/60">
+            Aviso: este app pode cometer erros nos cálculos. Confira sempre os valores antes de tomar decisões
+            financeiras.
+          </p>
+          <p className="mt-2 text-center text-[11px] tracking-wide text-white/40">por Vanusa Oliveira</p>
         </div>
       </div>
     </div>
