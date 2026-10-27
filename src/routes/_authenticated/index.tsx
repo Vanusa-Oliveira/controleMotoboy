@@ -5,8 +5,9 @@ import { LineChart, Line, XAxis, Tooltip, ResponsiveContainer, CartesianGrid } f
 import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
 import { NovaCorridaModal } from "@/components/NovaCorridaModal";
-import { getConfig, getFechamento, listFechamentos, saveConfig as saveConfigDb, totaisDoDia } from "@/lib/db";
-import { brl, today, fmtDateShort, parseNum, numToInput } from "@/lib/format";
+import { faturamentoPeriodo, getConfig, getFechamento, listFechamentos, saveConfig as saveConfigDb, totaisDoDia } from "@/lib/db";
+import { brl, today, fmtDateShort, parseNum, numToInput, weekStart } from "@/lib/format";
+import { ManutencaoCard, MetasCard } from "@/components/MetasManutencao";
 import { Field, inputCls } from "@/components/Field";
 
 export const Route = createFileRoute("/_authenticated/")({
@@ -18,6 +19,8 @@ type Config = {
   preco_gasolina: number;
   custo_manutencao_km: number;
   km_l_estimado: number;
+  meta_diaria: number;
+  meta_semanal: number;
 };
 
 function DashboardPage() {
@@ -33,7 +36,10 @@ function DashboardPage() {
     preco_gasolina: 6,
     custo_manutencao_km: 0.15,
     km_l_estimado: 33,
+    meta_diaria: 0,
+    meta_semanal: 0,
   });
+  const [progresso, setProgresso] = useState({ dia: 0, semana: 0 });
   const [savingConfig, setSavingConfig] = useState(false);
   const [reload, setReload] = useState(0);
   const [pendente, setPendente] = useState(0);
@@ -45,6 +51,7 @@ function DashboardPage() {
     const cfg = getConfig(t);
     setPendente(dia.pendente);
     setFechado(!!fech);
+    setProgresso({ dia: faturamentoPeriodo(t, t), semana: faturamentoPeriodo(weekStart(), t) });
     setConfigurado(!!cfg);
     setStats({
       bruto: dia.recebido,
@@ -58,6 +65,8 @@ function DashboardPage() {
         preco_gasolina: cfg.preco_gasolina,
         custo_manutencao_km: cfg.custo_manutencao_km,
         km_l_estimado: cfg.km_l_estimado,
+        meta_diaria: cfg.meta_diaria ?? 0,
+        meta_semanal: cfg.meta_semanal ?? 0,
       });
     }
     setChart(
@@ -81,6 +90,7 @@ function DashboardPage() {
       return toast.error(err?.message ?? "Erro ao salvar");
     }
     setSavingConfig(false);
+    setReload((n) => n + 1);
     toast.success("Configurações salvas");
     setConfigurado(true);
     setShowConfig(false);
@@ -142,6 +152,9 @@ function DashboardPage() {
         </p>
       )}
 
+      <MetasCard dia={progresso.dia} semana={progresso.semana} metaDia={config.meta_diaria} metaSemana={config.meta_semanal} />
+      <ManutencaoCard refresh={reload} />
+
       <button
         onClick={() => setShowConfig((v) => !v)}
         aria-expanded={showConfig || !configurado}
@@ -170,6 +183,12 @@ function DashboardPage() {
           <NumberField label="Consumo da moto (km por litro)" hint="Quantos km sua moto faz com 1 litro." error={configErrors.consumo}
             value={config.km_l_estimado}
             onChange={(v) => setConfig({ ...config, km_l_estimado: v })} />
+          <NumberField label="Meta diária de faturamento (R$)" hint="Opcional. Deixe 0 para não usar meta."
+            value={config.meta_diaria}
+            onChange={(v) => setConfig({ ...config, meta_diaria: v })} />
+          <NumberField label="Meta semanal de faturamento (R$)" hint="Opcional. A semana começa na segunda-feira."
+            value={config.meta_semanal}
+            onChange={(v) => setConfig({ ...config, meta_semanal: v })} />
           <p className="text-xs text-muted-foreground">Vale para hoje e para os próximos dias, até você mudar de novo.</p>
           <button
             onClick={saveConfig}

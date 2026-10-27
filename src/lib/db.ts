@@ -33,6 +33,15 @@ export type Config = {
   preco_gasolina: number;
   custo_manutencao_km: number;
   km_l_estimado: number;
+  // Metas de faturamento recebido (0 ou ausente = sem meta).
+  meta_diaria?: number;
+  meta_semanal?: number;
+};
+
+export type Lembrete = {
+  id: string;
+  nome: string;
+  intervalo_km: number;
 };
 
 export type Transacao = {
@@ -62,11 +71,12 @@ type Store = {
   configs: Config[];
   transacoes: Transacao[];
   gastos: Gasto[];
+  lembretes: Lembrete[];
 };
 
 const KEY = "rotapro:data:v1";
 
-const empty = (): Store => ({ corridas: [], fechamentos: [], configs: [], transacoes: [], gastos: [] });
+const empty = (): Store => ({ corridas: [], fechamentos: [], configs: [], transacoes: [], gastos: [], lembretes: [] });
 
 // Se o localStorage estiver bloqueado (ex.: modo privado), os dados ficam só em memória.
 let memory: Store | null = null;
@@ -361,12 +371,18 @@ export function restoreGasto(g: Gasto) {
 }
 
 // Saldo de cada conta com TODOS os lançamentos (não só os exibidos na lista):
-// saldo inicial em caixa (da configuração mais antiga) + movimentações − gastos da moto.
+// saldo inicial em caixa (da configuração mais antiga) + corridas já recebidas
+// (dinheiro → Dinheiro, PIX pago → Banco/PIX) + movimentações − gastos da moto.
 export function getSaldos() {
   const s = read();
   const inicial = s.configs.slice().sort((a, b) => a.data.localeCompare(b.data))[0]?.saldo_inicial_caixa ?? 0;
   let dinheiro = inicial;
   let banco = 0;
+  for (const c of s.corridas) {
+    if (!c.pago) continue;
+    if (c.metodo_pagamento === "Dinheiro") dinheiro += c.valor_total;
+    else banco += c.valor_total;
+  }
   for (const t of s.transacoes) {
     const v = t.tipo === "Entrada" ? t.valor : -t.valor;
     if (t.conta_origem === "Dinheiro") dinheiro += v;
@@ -377,6 +393,60 @@ export function getSaldos() {
     else dinheiro -= g.valor;
   }
   return { dinheiro: round2(dinheiro), banco: round2(banco), inicial };
+}
+
+// ---------- metas ----------
+// Faturamento recebido (corridas pagas) entre duas datas, inclusive.
+export function faturamentoPeriodo(ini: string, fim: string) {
+  let total = 0;
+  for (const c of read().corridas) {
+    if (c.pago && c.data >= ini && c.data <= fim) total += c.valor_total;
+  }
+  return round2(total);
+}
+
+// ---------- lembretes de manutenção ----------
+export function listLembretes() {
+  return read().lembretes.slice().sort((a, b) => a.nome.localeCompare(b.nome));
+}
+
+export function addLembrete(nome: string, intervalo_km: number) {
+  mutate((s) => {
+    s.lembretes.push({ id: uid(), nome, intervalo_km });
+  });
+}
+
+export function deleteLembrete(id: string) {
+  mutate((s) => {
+    s.lembretes = s.lembretes.filter((l) => l.id !== id);
+  });
+}
+
+const semAcento = (t: string) => t.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+
+// Km rodado desde o último gasto cujo nome contém o do lembrete (ex.: "óleo").
+// Sem nenhum gasto correspondente, conta todo o km já fechado.
+export function statusManutencao() {
+  const s = read();
+  return s.lembretes
+    .map((l) => {
+      const chave = semAcento(l.nome);
+      const ultimo = s.gastos
+        .filter((g) => semAcento(g.servico_peca).includes(chave))
+        .sort((a, b) => b.data.localeCompare(a.data))[0];
+      const kmDesde = s.fechamentos
+        .filter((f) => !ultimo || f.data > ultimo.data)
+        .reduce((a, f) => a + f.km_rodado, 0);
+      const restante = l.intervalo_km - kmDesde;
+      return {
+        lembrete: l,
+        ultimo: ultimo?.data ?? null,
+        kmDesde: Math.round(kmDesde),
+        restante: Math.round(restante),
+        pct: l.intervalo_km > 0 ? Math.min(1, kmDesde / l.intervalo_km) : 0,
+      };
+    })
+    .sort((a, b) => b.pct - a.pct);
 }
 
 // ---------- backup ----------

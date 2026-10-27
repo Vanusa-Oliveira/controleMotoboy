@@ -8,6 +8,8 @@ import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 import { VitePWA } from "vite-plugin-pwa";
 
 export default defineConfig({
+  // Na Vercel (VERCEL=1) o build gera a saída da Vercel; nos demais ambientes segue o padrão do Lovable (Cloudflare).
+  nitro: process.env.VERCEL ? { preset: "vercel" } : {},
   tanstackStart: {
     server: { entry: "server" },
   },
@@ -49,6 +51,15 @@ export default defineConfig({
                 cacheName: "pages",
                 networkTimeoutSeconds: 3,
                 expiration: { maxEntries: 50, maxAgeSeconds: 60 * 60 * 24 * 7 },
+              },
+            },
+            {
+              // JS/CSS com hash no nome: depois de visitados, o app abre mesmo sem internet.
+              urlPattern: ({ url }) => url.origin === self.location.origin && url.pathname.startsWith("/assets/"),
+              handler: "CacheFirst",
+              options: {
+                cacheName: "build-assets",
+                expiration: { maxEntries: 200, maxAgeSeconds: 60 * 60 * 24 * 30 },
               },
             },
             {

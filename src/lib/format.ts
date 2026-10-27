@@ -50,3 +50,14 @@ export const monthStart = () => {
   const d = new Date();
   return isoLocal(new Date(d.getFullYear(), d.getMonth(), 1));
 };
+
+// Segunda-feira da semana atual (YYYY-MM-DD).
+export const weekStart = () => {
+  const d = new Date();
+  d.setDate(d.getDate() - ((d.getDay() + 6) % 7));
+  return isoLocal(d);
+};
+
+// Escapa texto antes de colocá-lo em HTML montado à mão (ex.: página de impressão do PDF).
+export const escapeHtml = (v: unknown) =>
+  String(v).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);

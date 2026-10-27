@@ -67,8 +67,8 @@ function ExtratoPage() {
         <SaldoCard label="Banco / PIX" value={saldos.banco} />
       </div>
       <p className="mt-2 text-center text-[11px] text-muted-foreground">
-        Saldo = {saldos.inicial > 0 ? `saldo inicial (${brl(saldos.inicial)}) + ` : ""}movimentações − gastos da moto.
-        As corridas não entram aqui; registre o que você guardar ou retirar.
+        Saldo = {saldos.inicial > 0 ? `saldo inicial (${brl(saldos.inicial)}) + ` : ""}corridas recebidas
+        (dinheiro e PIX pago) + movimentações − gastos da moto. Não registre aqui o que já lançou como corrida.
       </p>
 
       <div className="mt-3 grid grid-cols-2 gap-2">

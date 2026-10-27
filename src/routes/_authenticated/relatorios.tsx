@@ -4,7 +4,7 @@ import { Download, FileSpreadsheet, Fuel, Wrench, PiggyBank, Upload, DatabaseBac
 import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
 import { exportBackup, importBackup, listCorridas, listFechamentos } from "@/lib/db";
-import { brl, daysAgo, fmtDate, monthStart, today } from "@/lib/format";
+import { brl, daysAgo, escapeHtml, fmtDate, monthStart, today } from "@/lib/format";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription,
   AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
@@ -125,7 +125,7 @@ function RelatoriosPage() {
     const totalLucro = rows.reduce((a, r) => a + r.lucro_livre, 0);
     const totalBruto = rows.reduce((a, r) => a + r.faturamento_bruto, 0);
     const totalCorridas = rows.reduce((a, r) => a + r.corridas, 0);
-    w.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>${title}</title>
+    w.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>${escapeHtml(title)}</title>
       <style>
         *{box-sizing:border-box;font-family:-apple-system,Segoe UI,Roboto,sans-serif}
         body{margin:24px;color:#111}
@@ -143,8 +143,8 @@ function RelatoriosPage() {
         button{margin-bottom:16px;padding:8px 16px;background:#0a8f4e;color:#fff;border:0;border-radius:6px;cursor:pointer}
       </style></head><body>
       <button onclick="window.print()">Imprimir / Salvar PDF</button>
-      <h1>${title}</h1>
-      <div class="sub">Gerado em ${new Date().toLocaleString("pt-BR")}</div>
+      <h1>${escapeHtml(title)}</h1>
+      <div class="sub">Gerado em ${escapeHtml(new Date().toLocaleString("pt-BR"))}</div>
       <div class="totals">
         <div class="t"><span>Lucro total</span><b>${brl(totalLucro)}</b></div>
         <div class="t"><span>Faturamento</span><b>${brl(totalBruto)}</b></div>
@@ -155,7 +155,7 @@ function RelatoriosPage() {
         <th class="r">Gasolina</th><th class="r">Manutenção</th><th class="r">Lucro</th><th class="r">Corridas</th>
       </tr></thead><tbody>
       ${rows.map((r) => `<tr>
-        <td>${tab === "diario" ? fmtDate(r.data) : r.data}</td>
+        <td>${escapeHtml(tab === "diario" ? fmtDate(r.data) : r.data)}</td>
         <td class="r">${brl(r.faturamento_bruto)}</td>
         <td class="r">${r.km_rodado.toFixed(1)}</td>
         <td class="r">${r.horas_trabalhadas.toFixed(1)}</td>
