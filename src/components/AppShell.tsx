@@ -81,7 +81,10 @@ export function AppShell({ children, title }: { children: ReactNode; title: stri
         </div>
       )}
 
-      <main className="mx-auto w-full max-w-2xl flex-1 px-3 pb-28 pt-3 sm:px-4 sm:pt-4">{children}</main>
+      <main className="mx-auto w-full max-w-2xl flex-1 px-3 pb-28 pt-3 sm:px-4 sm:pt-4">
+        {children}
+        <p className="mt-8 text-center text-[11px] tracking-wide text-muted-foreground/60">RotaPro · por Vanusa Oliveira</p>
+      </main>
 
 
       <nav aria-label="Navegação principal" className="fixed bottom-0 left-0 right-0 z-40 border-t border-border bg-card safe-bottom">
