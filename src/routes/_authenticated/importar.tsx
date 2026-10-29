@@ -1,12 +1,12 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo, useRef, useState } from "react";
-import { ImagePlus, ClipboardPaste, Loader2, Info, Check, AlertTriangle, Trash2 } from "lucide-react";
+import { useMemo, useState } from "react";
+import { Loader2, Info, Check, AlertTriangle, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
 import { Field, inputCls } from "@/components/Field";
 import { addCorrida, listCorridas } from "@/lib/db";
 import { brl, numToInput, parseNum, today } from "@/lib/format";
-import { VALOR_PADRAO, lerLinha, lerTexto, totalDe, type LinhaLida, type Pagamento } from "@/lib/importar";
+import { VALOR_PADRAO, lerTexto, totalDe, type LinhaLida, type Pagamento } from "@/lib/importar";
 
 export const Route = createFileRoute("/_authenticated/importar")({
   component: ImportarPage,
@@ -44,13 +44,10 @@ function ImportarPage() {
   const [valorPadrao, setValorPadrao] = useState(() => numToInput(valorSalvo()));
   const [itens, setItens] = useState<Item[]>([]);
   const [ignoradas, setIgnoradas] = useState<{ raw: string; motivo: string }[]>([]);
-  const [colando, setColando] = useState(false);
   const [texto, setTexto] = useState("");
-  const [lendo, setLendo] = useState<{ fracao: number; etapa: string } | null>(null);
   const [leu, setLeu] = useState(false);
   const [salvando, setSalvando] = useState(false);
   const [salvas, setSalvas] = useState<number | null>(null);
-  const arquivo = useRef<HTMLInputElement>(null);
 
   const valorPadraoNum = parseNum(valorPadrao) ?? 0;
 
@@ -94,32 +91,13 @@ function ImportarPage() {
     setIgnoradas((ig) => [...ig, ...fora]);
     setLeu(true);
     setSalvas(null);
-    if (novos.length === 0) toast.error("Não encontrei nenhuma corrida. Confira se o print mostra as anotações.");
+    if (novos.length === 0) toast.error("Não encontrei nenhuma corrida no texto. Confira se copiou as mensagens certas.");
     else toast.success(`${novos.length} ${novos.length === 1 ? "anotação encontrada" : "anotações encontradas"}. Confira antes de importar.`);
-  };
-
-  const lerArquivos = async (files: FileList | null) => {
-    if (!files?.length) return;
-    try {
-      const { lerImagem } = await import("@/lib/ocr");
-      for (const f of Array.from(files)) {
-        setLendo({ fracao: 0, etapa: "Preparando" });
-        const linhas = await lerImagem(f, (fracao, etapa) => setLendo({ fracao, etapa }));
-        adicionar(linhas.map((l) => lerLinha(l.texto, l.dica)));
-      }
-    } catch (err: any) {
-      console.error(err);
-      toast.error("Não consegui ler a imagem. Verifique a internet na primeira leitura ou cole o texto da conversa.");
-    } finally {
-      setLendo(null);
-      if (arquivo.current) arquivo.current.value = "";
-    }
   };
 
   const lerColado = () => {
     adicionar(lerTexto(texto));
     setTexto("");
-    setColando(false);
   };
 
   const atualizar = (id: string, patch: Partial<Item>) => setItens((its) => its.map((it) => (it.id === id ? { ...it, ...patch } : it)));
@@ -202,44 +180,18 @@ function ImportarPage() {
         </Field>
       </div>
 
-      <div className="mt-3 grid grid-cols-2 gap-2">
-        <button onClick={() => arquivo.current?.click()} disabled={!!lendo}
-          className="flex items-center justify-center gap-2 rounded-xl bg-primary px-3 py-3 text-sm font-bold text-primary-foreground disabled:opacity-60">
-          <ImagePlus className="h-4 w-4" /> Enviar print
+      <div className="mt-3 space-y-2 rounded-xl border border-border bg-card p-3">
+        <label htmlFor="texto-colado" className="text-xs font-medium text-muted-foreground">
+          No WhatsApp, selecione e copie as mensagens e cole aqui (uma por linha).
+        </label>
+        <textarea id="texto-colado" value={texto} onChange={(e) => setTexto(e.target.value)} rows={6}
+          placeholder={"Minas Grill\n2 Carol Coxinha 💰\n3 Minas Grill 💵\nPaguei 95"}
+          className={`${inputCls} font-mono text-sm`} />
+        <button onClick={lerColado} disabled={!texto.trim()}
+          className="w-full rounded-lg bg-primary py-2.5 text-sm font-bold text-primary-foreground disabled:opacity-50">
+          Ler mensagens
         </button>
-        <button onClick={() => setColando((v) => !v)} disabled={!!lendo}
-          className="flex items-center justify-center gap-2 rounded-xl border border-border bg-card px-3 py-3 text-sm font-bold disabled:opacity-60">
-          <ClipboardPaste className="h-4 w-4" /> Colar texto
-        </button>
-        <input ref={arquivo} type="file" accept="image/*" multiple className="hidden" onChange={(e) => lerArquivos(e.target.files)} />
       </div>
-
-      {colando && (
-        <div className="mt-3 space-y-2 rounded-xl border border-border bg-card p-3">
-          <label htmlFor="texto-colado" className="text-xs font-medium text-muted-foreground">
-            Cole as mensagens (uma por linha). Com texto, os emojis são lidos com precisão total.
-          </label>
-          <textarea id="texto-colado" value={texto} onChange={(e) => setTexto(e.target.value)} rows={6}
-            placeholder={"Minas Grill\n2 Carol Coxinha 💰\n3 Minas Grill 💵\nPaguei 95"}
-            className={`${inputCls} font-mono text-sm`} />
-          <button onClick={lerColado} disabled={!texto.trim()}
-            className="w-full rounded-lg bg-primary py-2.5 text-sm font-bold text-primary-foreground disabled:opacity-50">
-            Ler texto
-          </button>
-        </div>
-      )}
-
-      {lendo && (
-        <div className="mt-3 rounded-xl border border-border bg-card p-3" role="status">
-          <div className="mb-1.5 flex items-center gap-2 text-xs font-medium">
-            <Loader2 className="h-3.5 w-3.5 animate-spin" /> {lendo.etapa}… {Math.round(lendo.fracao * 100)}%
-          </div>
-          <div className="h-2 overflow-hidden rounded-full bg-muted">
-            <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${Math.round(lendo.fracao * 100)}%` }} />
-          </div>
-          <p className="mt-1.5 text-xs text-muted-foreground">A imagem é lida no seu aparelho e não é enviada a ninguém.</p>
-        </div>
-      )}
 
       {salvas !== null && !leu && (
         <div className="mt-3 rounded-xl border border-success/40 bg-success/10 p-3 text-sm">
@@ -252,8 +204,7 @@ function ImportarPage() {
         <>
           <p className="mt-4 rounded-lg bg-warning/10 px-3 py-2 text-xs">
             <AlertTriangle className="mr-1 inline h-3.5 w-3.5 text-warning" />
-            Confira cada linha. Em imagens, o pagamento é deduzido pela cor do emoji e pode errar; corrija se precisar.
-            "Pendente" entra como PIX a receber.
+            Confira cada linha antes de importar. "Pendente" entra como PIX a receber.
           </p>
 
           <div className="mt-3 space-y-2">
@@ -352,7 +303,7 @@ function ImportarPage() {
       )}
 
       {leu && itens.length === 0 && (
-        <p className="mt-6 text-center text-sm text-muted-foreground">Nada para importar. Envie outro print ou cole o texto.</p>
+        <p className="mt-6 text-center text-sm text-muted-foreground">Nada para importar. Cole outras mensagens acima.</p>
       )}
     </AppShell>
   );
